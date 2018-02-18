@@ -70,6 +70,14 @@ class Parser(object):
 
 parser = Parser()
 
+def respond(err, res=None):
+    return {
+        'statusCode': '400' if err else '200',
+        'body': err.message if err else json.dumps(res),
+        'headers': {
+            'Content-Type': 'application/json',
+        },
+    }
 
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event))
@@ -84,13 +92,15 @@ def lambda_handler(event, context):
 def handle_lambda_proxy_event(event):
     body = event['body']
     headers = event['headers']
+    logGroup      = event["pathParameters"]["logGroup"]
+    logStreamName = event["pathParameters"]["logStream"]
+
+    if logGroup == "test":
+        return respond( None, { "status": "right back at you"} )
 
     # sanity-check source
     assert headers['X-Forwarded-Proto'] == 'https'
     assert headers['Content-Type'] == 'application/logplex-1'
-
-    logGroup      = event["pathParameters"]["logGroup"]
-    logStreamName = event["pathParameters"]["logStream"]
 
     # split into chunks
     def get_chunk(payload):
@@ -134,9 +144,12 @@ def handle_lambda_proxy_event(event):
             title = group_name
             # format the syslog event as a slack message attachment
             #slack_att = slack_format_attachment(log_msg=None, log_rec=evt)
-            text = "\n" + "\n".join(lines)
+            #text = "\n" + "\n".join(lines)
             #slack(text=text, title=title, attachments=[slack_att], channel=channel, severity=severity)
-            send_to_cloudwatch( cwl, logGroup, logStreamName, evt["timestamp"], text )
+            timestamp = int(round(time.time() * 1000))   # TODO: parse lines to set time to recorded time
+            #timestamp = evt["timestamp"] ....
+            for text in lines:
+                send_to_cloudwatch( cwl, logGroup, logStreamName, timestamp, txt )
 
     # sanity-check number of parsed messages
     assert int(headers['Logplex-Msg-Count']) == chunk_count
@@ -145,8 +158,6 @@ def handle_lambda_proxy_event(event):
 
 
 def send_to_cloudwatch( cwl, logGroup, logGroupStream, timestamp, text ):
-    #timestamp = int(round(time.time() * 1000))
-    
     stream_info = cwl.describe_log_streams(logGroupName=logGroup, logStreamNamePrefix=logGroupStream)["logStreams"][0]
     if 'uploadSequenceToken' not in stream_info:
         cwl.put_log_events( logGroupName=logGroup, logStreamName=logGroupStream, logEvents=[ { "timestamp": timestamp,
