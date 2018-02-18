@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Serverless function to translate Heroku Log syncs to Cloudwatch Logs.
+
+Parameters:
+  DeployBucket:
+    Type: String
+    Default: heroku-cloudwatch-sync-app
+    Description: name for this deployment of Heroku Cloudwatch app
+
+Resources:
+  CodeS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref DeployBucket
+
+  herokuCloudwatchSync:
+    Type: 'AWS::Serverless::Function'
+    DependsOn: CodeS3Bucket
+    Properties:
+      CodeUri:
+        Bucket: !Ref DeployBucket 
+        Key: "herokuCloudwatchSync"
+      Handler: herokuCloudwatchSync/heroku_sync_to_cloudwatch.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.6
+      Description: ''
+      MemorySize: 512
+      Timeout: 15
+      Events:
+        LambdaMicroservice:
+          Type: Api
+          Properties:
+            Path: /flush/{logGroup}/{logStream}
+            Method: ANY
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+
+  herokuCloudwatchSyncPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        'Fn::GetAtt':
+          - herokuCloudwatchSync
+          - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        'Fn::Sub': 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*/*/*'
