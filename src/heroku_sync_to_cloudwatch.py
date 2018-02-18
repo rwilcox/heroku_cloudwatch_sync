@@ -5,6 +5,7 @@ This is designed to be run as a Python3.6 lambda.
 """
 
 import json
+import time
 import boto3
 import logging
 import iso8601
@@ -149,7 +150,7 @@ def handle_lambda_proxy_event(event):
             timestamp = int(round(time.time() * 1000))   # TODO: parse lines to set time to recorded time
             #timestamp = evt["timestamp"] ....
             for text in lines:
-                send_to_cloudwatch( cwl, logGroup, logStreamName, timestamp, txt )
+                send_to_cloudwatch( cwl, logGroup, logStreamName, timestamp, text )
 
     # sanity-check number of parsed messages
     assert int(headers['Logplex-Msg-Count']) == chunk_count
