@@ -9,19 +9,14 @@ Parameters:
     Description: name for this deployment of Heroku Cloudwatch app
 
 Resources:
-  CodeS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref DeployBucket
 
   herokuCloudwatchSync:
     Type: 'AWS::Serverless::Function'
-    DependsOn: CodeS3Bucket
     Properties:
       CodeUri:
         Bucket: !Ref DeployBucket 
-        Key: "herokuCloudwatchSync"
-      Handler: herokuCloudwatchSync/heroku_sync_to_cloudwatch.lambda_handler
+        Key: "herokuCloudwatchSync.zip"
+      Handler: heroku_sync_to_cloudwatch.lambda_handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.6
       Description: ''
