@@ -10,6 +10,8 @@ CACHE_WHEELHOUSE_STAMP=$(BUILD_DIR)/cache-wheelhouse-stamp
 OUTPUT_FILE_NAME=herokuCloudwatchSync.zip
 OUTPUT_ZIP=$(BUILD_DIR)/$(OUTPUT_FILE_NAME)
 
+-include .env
+
 $(OUTPUT_ZIP): $(STAGING_DIRECTORY_STAMP)
 	#rm -f $(OUTPUT_ZIP)
 	cd $(STAGING_DIRECTORY) && zip -q -X -9 -r ../$(OUTPUT_FILE_NAME) *
@@ -38,6 +40,10 @@ $(STAGING_DIRECTORY_STAMP): $(SRC_DIR)/heroku_sync_to_cloudwatch.py $(STAGING_WH
 	cp $(SRC_DIR)/heroku_sync_to_cloudwatch.py $(STAGING_DIRECTORY)
 	unzip -q "$(STAGING_WHEELHOUSE)/*.whl" -d $(STAGING_DIRECTORY)
 	touch $@
+
+deploy: $(OUTPUT_ZIP)
+	aws s3 cp $(OUTPUT_ZIP) s3://$(S3_BUCKET_NAME)
+	aws lambda update-function-code --s3-bucket=$(S3_BUCKET_NAME) --s3-key=$(OUTPUT_FILE_NAME) --function-name=$(AWS_CREATED_LAMBDA_NAME)
 
 all: $(OUTPUT_ZIP)
 #	.PHONY: all clean
