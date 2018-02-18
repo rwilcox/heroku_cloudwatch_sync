@@ -3,14 +3,29 @@ About
 
 I like Heroku as a first destination for new projects. Heroku has a couple addons for log management, but AWS CloudWatch Logs is a super low cost place for log files, and a relatively known quantity operationally.
 
+There's no simple "select this addon" solution for Cloudwatch Logs from Heroku, but Heroku supports log "drains".
+
+This lambda function acts as a Heroku log drain.
+
 With a serverless solution I'm only charged for computing resources I use: important for situations where Heroku's free tier may power down the unused instance.
 
-TODO:
+Using this lambda script
+=========================
+
+  1. Create an S3 bucket named `heroku-cloudwatch-sync-app`. If you decide to use a different name then there's a variable for that in the Cloudformation template for that.
+
+  2. Run `build-scripts/create_cloudformation.sh`
+
+  3. `cp env.sample .env` and fill out the values of the environmental variables with the S3 bucket name and the name of the lambda function that Cloudformation created for you (go into the lambda management console).
+
+  4. `make` creates the zip file for deployment
+  5. `make deploy` will deploy the package to S3 and trigger lambda to use the new code.
+
+Testing deployment
 ========================
 
-  * s3 bucket needs to be created (and have lambda package uploaded) before running CFN
-  * upload zip file to s3 bucket
-  * split s3 bucket creation off from rest of it, as S3 key must exist for lambda resource to be created
+Visit the `/Prod/flush/test/testing` route and you should not get errors in the CloudWatch logs for the lambda function.
+
 
 Credit:
 ==========================
