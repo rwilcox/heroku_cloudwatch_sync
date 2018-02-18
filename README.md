@@ -20,6 +20,9 @@ Using this lambda script
 
   4. `make` creates the zip file for deployment
   5. `make deploy` will deploy the package to S3 and trigger lambda to use the new code.
+  6. Using the AWS lambda management console, find out the URL for the lambda.
+  7. The lambda takes two path parameters at the end: these are the Cloudwatch Logs log group and log stream to write events to. Decide on these.
+  8. `heroku drains:add https://..../YOUR_LOG_GROUP/YOUR_LOG_STREAM`
 
 Testing deployment
 ========================
