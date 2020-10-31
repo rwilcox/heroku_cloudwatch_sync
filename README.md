@@ -36,3 +36,8 @@ Credit:
   * [On aws cloudformation package and references in CodeURI](https://github.com/awslabs/serverless-application-model/issues/61#issuecomment-311066225)
   * Basis for Makefile: [jc2k's blog post on using make for Python Lambda functions](https://unrouted.io/2016/07/21/use-make/)
   * Basis for reading Heroku flush info: [Mischa Spiegelmock's Heroku logging to Slack implementation](https://spiegelmock.com/2017/10/26/heroku-logging-to-aws-lambda/)
+
+Alternatives
+=========================
+
+If you want to avoid doing all this, consider [Logbox.io](https://logbox.io/?r=rwilcox), which provides a similar service but with less AWS fiddling. (Especially good if AWS isn't your primary cloud provider!)
